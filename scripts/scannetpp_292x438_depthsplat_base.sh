@@ -24,7 +24,7 @@
 #output_dir=checkpoints/re10k-292x438-depthsplat-base
 
 
-# finetune on scannetpp, random view 2-6
+# finetune on scannetpp, random view 2
 # 4x GPUs, batch size 1 on each gpu (>=43GB memory)
 # resume from the previously pretrained model on re10k
 PRETRAINED_MODEL_ON_RE10K=pretrained/depthsplat-gs-base-re10k-256x256-044fdb17.pth
@@ -33,14 +33,14 @@ python -m src.main +experiment=scannetpp \
 data_loader.train.batch_size=1 \
 dataset.test_chunk_interval=1 \
 trainer.val_check_interval=0.2 \
-train.eval_model_every_n_val=3 \
+train.eval_model_every_n_val=0 \
 dataset.roots=[datasets/scannetpp] \
 dataset.near=1. \
 dataset.far=200. \
-dataset.view_sampler.num_target_views=8 \
-dataset.view_sampler.num_context_views=6 \
+dataset.view_sampler.num_target_views=4 \
+dataset.view_sampler.num_context_views=2 \
 dataset.min_views=2 \
-dataset.max_views=6 \
+dataset.max_views=2 \
 dataset.view_sampler.min_distance_between_context_views=20 \
 dataset.view_sampler.max_distance_between_context_views=50 \
 dataset.view_sampler.context_gap_warm_up_steps=10000 \
