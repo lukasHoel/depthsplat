@@ -64,6 +64,38 @@ wandb.project=depthsplat \
 output_dir=checkpoints/scannetpp-292x438-depthsplat-base
 
 
+python -m src.main +experiment=scannetpp \
+data_loader.train.batch_size=1 \
+dataset.test_chunk_interval=10 \
+trainer.val_check_interval=0.5 \
+train.eval_model_every_n_val=0 \
+dataset.roots=[datasets/scannetpp] \
+dataset.near=1. \
+dataset.far=200. \
+dataset.view_sampler.num_target_views=4 \
+dataset.view_sampler.num_context_views=2 \
+dataset.min_views=2 \
+dataset.max_views=2 \
+dataset.view_sampler.min_distance_between_context_views=20 \
+dataset.view_sampler.max_distance_between_context_views=50 \
+dataset.view_sampler.context_gap_warm_up_steps=10000 \
+dataset.view_sampler.initial_min_distance_between_context_views=15 \
+dataset.view_sampler.initial_max_distance_between_context_views=30 \
+trainer.max_steps=150000 \
+model.encoder.num_scales=2 \
+model.encoder.upsample_factor=2 \
+model.encoder.lowest_feature_resolution=4 \
+model.encoder.monodepth_vit_type=vitb \
+model.encoder.gaussian_regressor_channels=32 \
+model.encoder.color_large_unet=true \
+model.encoder.feature_upsampler_channels=128 \
+model.encoder.return_depth=true \
+checkpointing.pretrained_monodepth=pretrained/depth_anything_v2_vitb.pth \
+checkpointing.pretrained_mvdepth=pretrained/gmflow-scale1-things-e9887eda.pth \
+wandb.project=depthsplat \
+output_dir=checkpoints/scannetpp-depthsplat-base
+
+
 # evaluate on scannetpp, view 6
 CUDA_VISIBLE_DEVICES=0 python -m src.main +experiment=scannetpp \
 data_loader.train.batch_size=1 \
