@@ -254,11 +254,11 @@ class DatasetScannetpp(IterableDataset):
 
                     # check the extrinsics
                     if any(torch.isnan(torch.det(extrinsics[context_indices][:, :3, :3]))):
-                        # print('invalid extrinsics')
+                        print('invalid extrinsics')
                         continue
 
                     if any(torch.isnan(torch.det(extrinsics[target_indices][:, :3, :3]))):
-                        # print('invalid extrinsics')
+                        print('invalid extrinsics')
                         continue
 
                     if not torch.allclose(torch.det(extrinsics[context_indices][:, :3, :3]), torch.det(extrinsics[context_indices][:, :3, :3]).new_tensor(1)):
