@@ -90,6 +90,7 @@ trainer:
   val_check_interval: 0.25
   gradient_clip_val: 0.5
   num_sanity_val_steps: 2
+  accumulate_grad_batches: 1
 
 output_dir: null
 
