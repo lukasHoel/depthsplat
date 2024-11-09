@@ -98,11 +98,11 @@ output_dir=checkpoints/scannetpp-depthsplat-base
 
 
 python -m src.main +experiment=scannetpp \
-data_loader.train.batch_size=2 \
+data_loader.train.batch_size=1 \
 dataset.test_chunk_interval=1 \
 trainer.accumulate_grad_batches=4 \
 trainer.val_check_interval=0.2 \
-train.eval_model_every_n_val=3 \
+train.eval_model_every_n_val=0 \
 dataset.roots=[datasets/scannetpp] \
 dataset.near=1. \
 dataset.far=200. \
@@ -131,6 +131,42 @@ checkpointing.pretrained_model=pretrained/depthsplat-gs-base-dl3dv-256x448-75cc0
 checkpointing.every_n_train_steps=500 \
 wandb.project=depthsplat \
 output_dir=checkpoints/scannetpp-v4-292x438-depthsplat-base
+
+
+python -m src.main +experiment=scannetpp \
+data_loader.train.batch_size=2 \
+dataset.test_chunk_interval=1 \
+trainer.accumulate_grad_batches=4 \
+trainer.val_check_interval=0.2 \
+train.eval_model_every_n_val=0 \
+dataset.roots=[datasets/scannetpp] \
+dataset.near=1. \
+dataset.far=200. \
+dataset.view_sampler.num_target_views=4 \
+dataset.view_sampler.num_context_views=2 \
+dataset.min_views=2 \
+dataset.max_views=2 \
+dataset.view_sampler.min_distance_between_context_views=5 \
+dataset.view_sampler.max_distance_between_context_views=20 \
+dataset.view_sampler.context_gap_warm_up_steps=10000 \
+dataset.view_sampler.initial_min_distance_between_context_views=5 \
+dataset.view_sampler.initial_max_distance_between_context_views=20 \
+trainer.max_steps=100000 \
+model.encoder.num_scales=2 \
+model.encoder.upsample_factor=4 \
+model.encoder.lowest_feature_resolution=8 \
+model.encoder.monodepth_vit_type=vitb \
+model.encoder.gaussian_regressor_channels=32 \
+model.encoder.color_large_unet=true \
+model.encoder.feature_upsampler_channels=128 \
+model.encoder.multiview_trans_nearest_n_views=3 \
+model.encoder.costvolume_nearest_n_views=3 \
+train.train_ignore_large_loss=0.1 \
+model.encoder.return_depth=true \
+checkpointing.pretrained_model=pretrained/depthsplat-gs-base-dl3dv-256x448-75cc0183.pth \
+checkpointing.every_n_train_steps=500 \
+wandb.project=depthsplat \
+output_dir=checkpoints/scannetpp-v5-292x438-depthsplat-base
 
 
 # evaluate on scannetpp, view 6
