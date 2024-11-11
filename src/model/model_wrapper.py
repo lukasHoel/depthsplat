@@ -379,7 +379,7 @@ class ModelWrapper(LightningModule):
             for idx, color in zip(index, input_images):
                 save_image(color, path / scene / f"color/{idx:0>6}.png")
 
-            return
+            # return
 
         # save depth vis
         if self.test_cfg.save_depth:
@@ -543,6 +543,8 @@ class ModelWrapper(LightningModule):
                 [a for a in images_prob],
                 path / "video" / f"{scene}_frame_{frame_str}.mp4",
             )
+
+            self.render_video_interpolation(batch, add_label_to_video=False)
 
         # compute scores
         if self.test_cfg.compute_scores:
@@ -921,7 +923,7 @@ class ModelWrapper(LightningModule):
         return self.render_video_generic(batch, trajectory_fn, "wobble", num_frames=60)
 
     @rank_zero_only
-    def render_video_interpolation(self, batch: BatchedExample) -> None:
+    def render_video_interpolation(self, batch: BatchedExample, add_label_to_video: bool = True) -> None:
         _, v, _, _ = batch["context"]["extrinsics"].shape
 
         def trajectory_fn(t):
@@ -945,7 +947,7 @@ class ModelWrapper(LightningModule):
             )
             return extrinsics[None], intrinsics[None]
 
-        return self.render_video_generic(batch, trajectory_fn, "rgb")
+        return self.render_video_generic(batch, trajectory_fn, "rgb", add_label_to_video=add_label_to_video)
 
     @rank_zero_only
     def render_video_interpolation_exaggerated(self, batch: BatchedExample) -> None:
@@ -1002,6 +1004,7 @@ class ModelWrapper(LightningModule):
         num_frames: int = 30,
         smooth: bool = True,
         loop_reverse: bool = True,
+        add_label_to_video: bool = True
     ) -> None:
         # Render probabilistic estimate of scene.
         gaussians_prob = self.encoder(batch["context"], self.global_step, False)
@@ -1039,7 +1042,7 @@ class ModelWrapper(LightningModule):
         images = [
             add_border(
                 hcat(
-                    add_label(image_prob, "Prediction"),
+                    add_label(image_prob, "Prediction") if add_label_to_video else image_prob,
                 )
             )
             for image_prob, _ in zip(images_prob, images_prob)
@@ -1060,11 +1063,14 @@ class ModelWrapper(LightningModule):
             assert isinstance(self.logger, LocalLogger)
             for key, value in visualizations.items():
                 tensor = value._prepare_video(value.data)
-                clip = mpy.ImageSequenceClip(list(tensor), fps=value._fps)
-                dir = LOG_PATH / key
+                n_frames = value.data.shape[1]
+                fps = 30 if n_frames > 30 else 15 if n_frames > 15 else 1
+                clip = mpy.ImageSequenceClip(list(tensor), fps=fps)
+                dir = Path(os.path.join(self.test_cfg.output_path, key))
                 dir.mkdir(exist_ok=True, parents=True)
+                file_name = f"{batch['scene'][0]}_frame_{batch['context']['index'][0, 0].item()}_{batch['context']['index'][0, 1].item()}"
                 clip.write_videofile(
-                    str(dir / f"{self.global_step:0>6}.mp4"), logger=None
+                    str(dir / f"{file_name}_{self.global_step:0>6}.mp4"), logger=None
                 )
 
     def configure_optimizers(self):

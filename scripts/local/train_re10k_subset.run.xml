@@ -1,0 +1,24 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="train_re10k_subset" type="PythonConfigurationType" factoryName="Python">
+    <module name="depthsplat" />
+    <option name="ENV_FILES" value="" />
+    <option name="INTERPRETER_OPTIONS" value="" />
+    <option name="PARENT_ENVS" value="true" />
+    <envs>
+      <env name="PYTHONUNBUFFERED" value="1" />
+    </envs>
+    <option name="SDK_HOME" value="" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/" />
+    <option name="IS_MODULE_SDK" value="true" />
+    <option name="ADD_CONTENT_ROOTS" value="true" />
+    <option name="ADD_SOURCE_ROOTS" value="true" />
+    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/main.py" />
+    <option name="PARAMETERS" value="+experiment=re10k data_loader.train.batch_size=1 dataset.test_chunk_interval=10 dataset.roots=[datasets/re10k] trainer.val_check_interval=0.5 trainer.max_steps=150000 model.encoder.num_scales=2 model.encoder.upsample_factor=2 model.encoder.lowest_feature_resolution=4 model.encoder.monodepth_vit_type=vitb model.encoder.gaussian_regressor_channels=32 model.encoder.color_large_unet=true model.encoder.feature_upsampler_channels=128 model.encoder.return_depth=true checkpointing.pretrained_monodepth=pretrained/depth_anything_v2_vitb.pth checkpointing.pretrained_mvdepth=pretrained/gmflow-scale1-things-e9887eda.pth wandb.project=depthsplat output_dir=checkpoints/re10k-depthsplat-base" />
+    <option name="SHOW_COMMAND_LINE" value="false" />
+    <option name="EMULATE_TERMINAL" value="false" />
+    <option name="MODULE_MODE" value="false" />
+    <option name="REDIRECT_INPUT" value="false" />
+    <option name="INPUT_FILE" value="" />
+    <method v="2" />
+  </configuration>
+</component>

@@ -29,6 +29,7 @@
 # resume from the previously pretrained model on re10k
 PRETRAINED_MODEL_ON_RE10K=pretrained/depthsplat-gs-base-re10k-256x256-044fdb17.pth
 
+# v2
 python -m src.main +experiment=scannetpp \
 data_loader.train.batch_size=1 \
 dataset.test_chunk_interval=1 \
@@ -63,7 +64,7 @@ checkpointing.every_n_train_steps=500 \
 wandb.project=depthsplat \
 output_dir=checkpoints/scannetpp-292x438-depthsplat-base
 
-
+# v3
 python -m src.main +experiment=scannetpp \
 data_loader.train.batch_size=1 \
 dataset.test_chunk_interval=10 \
@@ -96,7 +97,7 @@ wandb.project=depthsplat \
 output_dir=checkpoints/scannetpp-depthsplat-base
 
 
-
+# v4
 python -m src.main +experiment=scannetpp \
 data_loader.train.batch_size=1 \
 dataset.test_chunk_interval=1 \
@@ -132,7 +133,7 @@ checkpointing.every_n_train_steps=500 \
 wandb.project=depthsplat \
 output_dir=checkpoints/scannetpp-v4-292x438-depthsplat-base
 
-
+# v5
 python -m src.main +experiment=scannetpp \
 data_loader.train.batch_size=2 \
 dataset.test_chunk_interval=1 \
@@ -168,7 +169,6 @@ checkpointing.every_n_train_steps=500 \
 wandb.project=depthsplat \
 output_dir=checkpoints/scannetpp-v5-292x438-depthsplat-base
 
-
 # evaluate on scannetpp, view 6
 CUDA_VISIBLE_DEVICES=0 python -m src.main +experiment=scannetpp \
 data_loader.train.batch_size=1 \
@@ -200,7 +200,6 @@ test.save_depth=false \
 test.save_video=false \
 test.stablize_camera=false \
 output_dir=output/tmp
-
 
 # evaluate on scannetpp, view 4
 CUDA_VISIBLE_DEVICES=0 python -m src.main +experiment=scannetpp \
@@ -234,8 +233,7 @@ test.save_video=false \
 test.stablize_camera=false \
 output_dir=output/tmp
 
-
-# evaluate on dl3dv, view 2
+# evaluate on scannetpp, view 2
 CUDA_VISIBLE_DEVICES=0 python -m src.main +experiment=scannetpp \
 data_loader.train.batch_size=1 \
 dataset.test_chunk_interval=1 \
@@ -248,7 +246,7 @@ dataset.far=200. \
 dataset/view_sampler=evaluation \
 test.compute_scores=true \
 dataset.view_sampler.num_context_views=2 \
-dataset.view_sampler.index_path=assets/dl3dv_start_0_distance_50_ctx_2v_tgt_4v_video_0-50.json \
+dataset.view_sampler.index_path=assets/scannetpp_ctx_2v_tgt_8v_video.json \
 model.encoder.num_scales=2 \
 model.encoder.upsample_factor=4 \
 model.encoder.lowest_feature_resolution=8 \
@@ -258,12 +256,12 @@ model.encoder.color_large_unet=true \
 model.encoder.feature_upsampler_channels=128 \
 model.encoder.multiview_trans_nearest_n_views=3 \
 model.encoder.costvolume_nearest_n_views=3 \
-checkpointing.pretrained_model=pretrained/depthsplat-gs-base-dl3dv-256x448-75cc0183.pth \
+checkpointing.pretrained_model=checkpoints/scannetpp-v5-292x438-depthsplat-base/checkpoints/epoch_316-step_15500.ckpt \
 wandb.project=depthsplat \
 wandb.mode=disabled \
-test.save_image=false \
-test.save_depth=false \
-test.save_video=false \
+test.save_image=true \
+test.save_depth=true \
+test.save_video=true \
 test.stablize_camera=false \
 output_dir=output/tmp
 
