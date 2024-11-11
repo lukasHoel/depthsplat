@@ -57,6 +57,11 @@ def train(cfg_dict: DictConfig):
                 eval_path = "assets/dl3dv_start_0_distance_50_ctx_6v_tgt_8v.json"
             else:
                 raise ValueError("unsupported number of views for dl3dv")
+        elif "scannetpp" in dataset_dir:
+            if cfg_dict["dataset"]["view_sampler"]["num_context_views"] == 2:
+                eval_path = "assets/scannetpp_ctx_2v_tgt_4v_eval_5_20.json"
+            else:
+                raise ValueError("unsupported number of views for scannetpp")
         else:
             raise Exception("Fail to load eval index path")
         eval_cfg_dict["dataset"]["view_sampler"] = {
