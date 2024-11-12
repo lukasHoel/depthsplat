@@ -544,7 +544,7 @@ class ModelWrapper(LightningModule):
                 path / "video" / f"{scene}_frame_{frame_str}.mp4",
             )
 
-            self.render_video_interpolation(batch, add_label_to_video=False)
+            self.render_video_interpolation(batch, add_label_to_video=False, save_posed_images=True)
 
         # compute scores
         if self.test_cfg.compute_scores:
@@ -923,7 +923,7 @@ class ModelWrapper(LightningModule):
         return self.render_video_generic(batch, trajectory_fn, "wobble", num_frames=60)
 
     @rank_zero_only
-    def render_video_interpolation(self, batch: BatchedExample, add_label_to_video: bool = True) -> None:
+    def render_video_interpolation(self, batch: BatchedExample, add_label_to_video: bool = True, save_posed_images: bool = False) -> None:
         _, v, _, _ = batch["context"]["extrinsics"].shape
 
         def trajectory_fn(t):
@@ -947,7 +947,7 @@ class ModelWrapper(LightningModule):
             )
             return extrinsics[None], intrinsics[None]
 
-        return self.render_video_generic(batch, trajectory_fn, "rgb", add_label_to_video=add_label_to_video)
+        return self.render_video_generic(batch, trajectory_fn, "rgb", add_label_to_video=add_label_to_video, save_posed_images=save_posed_images)
 
     @rank_zero_only
     def render_video_interpolation_exaggerated(self, batch: BatchedExample) -> None:
@@ -1004,7 +1004,8 @@ class ModelWrapper(LightningModule):
         num_frames: int = 30,
         smooth: bool = True,
         loop_reverse: bool = True,
-        add_label_to_video: bool = True
+        add_label_to_video: bool = True,
+        save_posed_images: bool = False
     ) -> None:
         # Render probabilistic estimate of scene.
         gaussians_prob = self.encoder(batch["context"], self.global_step, False)
@@ -1034,6 +1035,64 @@ class ModelWrapper(LightningModule):
         output_prob = self.decoder.forward(
             gaussians_prob, extrinsics, intrinsics, near, far, (h, w), "depth"
         )
+
+        if save_posed_images:
+            all_rgb = output_prob.color[0]
+            all_rgb = (all_rgb.clip(min=0, max=1) * 255).type(torch.uint8).cpu().permute(0, 2, 3, 1).numpy()
+            upsample_factor = 1
+            target_height = all_rgb.shape[1] * upsample_factor
+            target_width = all_rgb.shape[2] * upsample_factor
+            all_rgb = [Image.fromarray(x).resize((target_width, target_height), resample=Image.Resampling.BICUBIC) for x in all_rgb]
+
+            all_extrinsics = extrinsics[0].cpu().numpy()
+            def convert_opencv_to_nerfstudio(poses):
+                poses[:, 0:3, 1:3] *= -1
+                poses = poses[:, np.array([1, 0, 2, 3]), :]
+                poses[:, 2, :] *= -1
+                return poses
+            all_extrinsics = convert_opencv_to_nerfstudio(all_extrinsics)
+
+            all_intrinsics = intrinsics[0].clone()  # normalized to (0..1)
+            all_intrinsics[:, 0:1] *= target_width
+            all_intrinsics[:, 1:2] *= target_height
+            assert torch.allclose(all_intrinsics[:], all_intrinsics[0:1])
+            all_intrinsics = all_intrinsics[0].cpu().numpy()
+
+            out_dir = os.path.join(self.test_cfg.output_path, "transforms")
+            rgb_folder_name = "rgb"
+            out_rgb_dir = os.path.join(out_dir, rgb_folder_name)
+            os.makedirs(out_rgb_dir, exist_ok=True)
+
+            frames_data = []
+            for idx, (frame, cam) in enumerate(zip(all_rgb, all_extrinsics)):
+                rgb_name = f"depthsplat_rendered_rgb_{idx:06d}.jpg"
+                frame.save(os.path.join(out_rgb_dir, rgb_name))
+                frames_data.append({
+                    "file_path": os.path.join(rgb_folder_name, rgb_name),
+                    "transform_matrix": cam.tolist()
+                })
+
+            # TODO: include mask of rgb renderings (e.g. no Gaussians rendered to pixels)
+            # TODO: fix data augmentation in dataloader, image resolution is different
+
+            transforms_data = {
+                "fl_x": float(all_intrinsics[0, 0]),
+                "fl_y": float(all_intrinsics[1, 1]),
+                "cx": float(all_intrinsics[0, 2]),
+                "cy": float(all_intrinsics[1, 2]),
+                "w": target_width,
+                "h": target_height,
+                "k1": 0.0,
+                "k2": 0.0,
+                "k3": 0.0,
+                "k4": 0.0,
+                "camera_model": "PINHOLE",
+                "frames": frames_data
+            }
+
+            with open(os.path.join(out_dir, "transforms.json"), "w") as f:
+                json.dump(transforms_data, f, indent=4)
+
         images_prob = [
             vcat(rgb, depth)
             for rgb, depth in zip(output_prob.color[0], depth_map(output_prob.depth[0]))

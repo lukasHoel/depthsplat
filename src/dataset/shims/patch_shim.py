@@ -20,6 +20,13 @@ def apply_patch_shim_to_views(views: BatchedViews, patch_size: int) -> BatchedVi
     intrinsics[:, :, 0, 0] *= w / w_new  # fx
     intrinsics[:, :, 1, 1] *= h / h_new  # fy
 
+    # TODO FIXME: adjust due to crop top/left
+    intrinsics[:, :, 0, 2] = (intrinsics[:, :, 0, 2] * w - col) / w_new
+    intrinsics[:, :, 1, 2] = (intrinsics[:, :, 1, 2] * h - row) / h_new
+
+    # intrinsics[:, :, 0, 2] -= col/w
+    # intrinsics[:, :, 1, 2] -= row/h
+
     return {
         **views,
         "image": image,
